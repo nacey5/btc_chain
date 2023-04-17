@@ -98,8 +98,12 @@ func sendRawTransactionHexToNode_BlockCypherAPI(txHex, netType string) (string, 
 	return ret.Tx.Hash, nil
 }
 
+type OpReturnDataObj struct {
+	Data string //set the data the opReturn
+}
+
 // send the test net btc transaction, 1 is stand for 0.000000001btc
-func SendTestNet_BTCNormalTransaction(senderPrivateKey, toAddress string, value int64) error {
+func SendTestNet_BTCNormalTransaction(senderPrivateKey, toAddress string, value int64, opReturn *OpReturnDataObj) error {
 	targetTransactionValue := btcutil.Amount(value)
 	blockCypherApiTestNet := "btc/test3"
 	// according to the sender's priKey to get info,ep:address
@@ -214,6 +218,16 @@ func SendTestNet_BTCNormalTransaction(senderPrivateKey, toAddress string, value 
 		return err
 	}
 	fmt.Println("the transaction hash:", txHash)
+
+	if opReturn != nil {
+		nullDataScript, err := txscript.NullDataScript([]byte(opReturn.Data))
+		if err != nil {
+			return err
+		}
+		opreturnOutput := &wire.TxOut{PkScript: nullDataScript, Value: 0}
+		tx.AddTxOut(opreturnOutput)
+	}
+
 	return nil
 }
 
